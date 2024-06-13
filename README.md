@@ -3,3 +3,8 @@ Web based multibody physics engine used to simulate robots over the web. Uses *A
 
 Goal is to make this into a plug and play website avoiding most if not all coding for users!
 
+## How to use:
+ *`git clone <ssh or https>` or 
+ * create a pull request! (after creating a local repository)
+
+
