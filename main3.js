@@ -97,3 +97,98 @@ function setupGraphics() {
     renderer.shadowMap.enabled = true;
 }
 
+function renderFrame()
+{
+	let deltaTime = clock.getDelta();
+	//update the ball time to live if ball in world
+	if (ballInWorld) ttlCounter += deltaTime;
+	//if time limite exceeded ,then delete ball!
+	if (ttlCounter > ttl)
+	{
+		physicsWorld.removeRigidBody(ball.userData.physicsBody);
+		scene.remove(ball);
+		ttlCounter = 0;
+		ballInWorld = false;
+	}
+	updatePhysics(deltaTime);
+	renderer.render(scene, camera);
+	requestAnimationframe(renderFrame);
+}
+
+function setupEventHandlers()
+{
+	window.addEventListener('resize', onWindowResize, false);
+	window.addEventListener('mousedown', onMouseDown, false);
+}
+
+function onWindowResize()
+{
+	camera.aspect = window.innerWidth / window.innerHeight;
+	camera.updateProjectionMatrix();
+	renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function onMouseDown(event)
+{
+	if (ballInWorld) return;
+	mouseCoords.set((event.clientX/window.innerWidth)*2 -1, -(event.clientY/window.innerHeight)*2 + 1);
+	raycaster.setFromCamera(mousrCoords, camera);
+
+	//create ball
+	pos.copy(raycaster.ray.direction);
+	pos.add(raycaster.ray.origin);
+	ball = createBall(pos);
+
+	//shoot ball
+	let ballbody = ball.userData.physicsBody;
+	pos.copy(raycaster.ray);
+	pos.multiplyScalar(70);
+	ballBody.setLinearVelocity(new Ammo.btVector3(pos.x, pos.y, pos.z));
+	ballInWorld = true;
+}
+
+function createWall(){
+	let pos = {x: 0, y: 25, z: -15};
+	let scale = {x: 50, y: 50, z: 2 };
+	let quat = {x: 0, y: 0, z: 0, w: 1};
+	let mass = 0;
+
+	//threejs
+	wall = new THREE.Mesh(new THREE.BoxBufferGeometry(), new THREE.MeshPhongMaterial({color: 0x42f5bf}));//mesh(geometry, material)
+
+	wall.position.set(pos.x, pos.y, pos.z);
+	wall.scale.set(scale.x , scale.y, scale.z);
+	wall.castShadow = true;
+	wall.receiveShadow = true;
+	scene.add(wall);
+	
+	//Ammojs
+	let transform = new Ammo.btTransform();
+	transform.setIdentity();
+	transform.setOrigin(new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w)); //[x, y, z, sigma]
+	let motionState = new Ammo.btDefaultMotionState(transform);
+
+	let colShape = new Ammo.btBoxShape(new Ammo.btVector3(scale.x*0.5, scale.y*0.5, scale.z*0.5));
+	colShape.setMargin(0.05);
+	
+	let localInertia = new Ammo.btVector3(0, 0, 0);
+	colShape.calculateLocalInertia(mass, localInertia);
+	
+	let rbInfo = new Ammo.btRigidBodyConstructionInfo( mass, motionState, colShape, localInertia );
+	let body = new Ammo.btRigidBody( rbInfo );	
+	body.setFriction(4);
+	body.setRollingFriction(10);
+
+        physicsWorld.addRigidBody( body );
+
+                //Let's overlay the wall with a grid for visual calibration
+       , 50, 0x1111aa, 0xaa1111 );
+
+        scene.add( gridHelper );
+
+        ridHelper.rotateX( THREE.Math.degToRad(90));
+        gridHelper.position.y = 25;
+	gridHelper.position.z = -14;
+
+	wall.userData.tag = "wall";
+}
