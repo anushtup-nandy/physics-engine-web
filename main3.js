@@ -1,6 +1,3 @@
-//NOTE:
-//No need to import since entire module is downloaded and added to ./js
-
 //variables
 let physicsWorld, scene, camera, renderer, rigidBodies = [], pos = new THREE.Vector3(), tmpTrans = null;
 let mouseCoords = new THREE.Vector2(), raycaster = new THREE.Raycaster();
@@ -87,9 +84,6 @@ function setupGraphics() {
 
     dirLight.shadow.camera.far = 13500;
 
-	//controls:
-	//const controls = new OrbitControls( camera, renderer.domElement );
-
     // Setup the renderer
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setClearColor(0xbfd1e5);
@@ -101,41 +95,5 @@ function setupGraphics() {
     renderer.gammaOutput = true;
 
     renderer.shadowMap.enabled = true;
-}
-
-function renderFrame()
-{
-	let deltaTime = clock.getDelta();
-	//update balltime to live if ball in the world
-	if (ballInWorld) ttlCounter +=deltaTime;
-	//if time limit exceeded delete the ball
-	if (ttlCounter> ttl) 
-	{
-		physicsWorld.removeRigidBody(ball.userData.physicsBody);
-		scene.remove(ball);
-		ttlCounter = 0;
-		ballInWorld = false;
-	}
-	updatePhysics(deltaTime);
-	renderer.render(scene, camera);
-	requestAnimationFrame(renderFrame);
-}
-
-function setupEventHandlers()
-{
-	window.addEventListener('resize', onWindowResize, false);
-	winow.addEventListener('mousedown', onMousedown, false);
-}
-
-function onWindowResize()
-{
-	camera.aspect = window.innerWidth/window.innerHeight;
-	camera.updateProjectionMatix();
-	renderer.setSize(window.innerWidth, window.innerHeight);
-}
-
-function onMousedown(event)
-{
-	if (ballInWorld)
 }
 
