@@ -217,7 +217,7 @@ function createBall(pos){
 	let localInertia = new Ammo.btVector3(0, 0, 0);
 	colShape.calculateLocalInertia(mass, localInertia);
 	let rbInfo = new Ammo.btRigidBodyConstructionInfo(mass, motionState, colShape, localInertia);
-	let body = new Ammo.btRigidBody();
+	let body = new Ammo.btRigidBody(rbInfo);
 	body.setFriction(4);
 	body.setRollingFriction(10);
 	body.setActivationState(STATE.DISABLE_DEACTIVATION);
