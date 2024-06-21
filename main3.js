@@ -11,6 +11,11 @@ Ammo().then(start)
 function start()
 {
 	tmpTrans = new Ammo.btTransform();
+	setupPhysicsWorld();
+	setupGraphics();
+	createWall();
+	setupEventHandlers();
+	renderFrame();
 }
 
 function setupPhysicsWorld()
