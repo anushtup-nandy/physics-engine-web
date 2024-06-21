@@ -154,7 +154,8 @@ function createWall(){
 	let mass = 0;
 
 	//threejs
-	wall = new THREE.Mesh(new THREE.BoxBufferGeometry(), new THREE.MeshPhongMaterial({color: 0x42f5bf}));//mesh(geometry, material)
+	wall_pos = new THREE.BoxBufferGeometry(scale.x, scale.y, scale.z);
+	wall = new THREE.Mesh(wall_pos, new THREE.MeshPhongMaterial({color: 0x42f5bf}));//mesh(geometry, material)
 
 	wall.position.set(pos.x, pos.y, pos.z);
 	wall.scale.set(scale.x , scale.y, scale.z);
@@ -181,8 +182,8 @@ function createWall(){
 
         physicsWorld.addRigidBody( body );
 
-                //Let's overlay the wall with a grid for visual calibration
-       , 50, 0x1111aa, 0xaa1111 );
+        //Let's overlay the wall with a grid for visual calibration
+	const gridHelper = new THREE.GridHelper(50, 50, 0x1111aa, 0xaa1111);
 
         scene.add( gridHelper );
 
@@ -192,3 +193,61 @@ function createWall(){
 
 	wall.userData.tag = "wall";
 }
+
+function createBall(pos){
+	let radius = 0.8;
+	let quat = {x:0, y:0, z:0, w:1};
+	let mass = 35;
+
+	//threejs
+	let ball = ballobject = new THREE.Mesh(new THREE.SphereBufferGeometry(radius));
+	ball.position.set(pos.x, pos.y, pos.z);
+	ball.castShadow = true;
+	ball.receiveShadow = true;
+	scene.add(ball);
+
+	//Ammojs
+	let transform = new Ammo.btTransform();
+	transform.setIdentity();
+	transform.setOrigin(new Ammo.btVector3(pos.x, pos.y, pos.z));
+	transform.setRotation(new Ammo.btQuaternion(quat.x, quat.y, quat.z, quat.w));
+	let motionState = new Ammo.btDefaultMotionState(transform);
+	let colShape = new Ammo.btSphereShape(radius);
+	colShape.setMargin(0.05);
+	let localInertia = new Ammo.btVector3(0, 0, 0);
+	colShape.calculateLocalInertia(mass, localInertia);
+	let rbInfo = new Ammo.btRigidBodyConstructionInfo(mass, motionState, colShape, localInertia);
+	let body = new Ammo.btRigidBody();
+	body.setFriction(4);
+	body.setRollingFriction(10);
+	body.setActivationState(STATE.DISABLE_DEACTIVATION);
+	physicsWorld.addRigidBody(body);
+	
+	rigidBodies.push(ball);
+	ball.userData.physicsBody = body;
+	ball.userData.tag = "ball";
+
+	return ball;
+}
+
+function updatePhysics(deltaTime)
+{
+	physicsWorld.stepSimulation(deltaTime, 10);
+	for (let i = 0; i < rigidBodies.length; i++)
+	{
+		let objTree = rigidBodies[i];
+		let objAmmo = objThree.userData.physicsBody;
+		let ms = objAmmo.getMotionState();
+		if (ms)
+		{
+			ms.getWorldTransform(tmpTrans)
+			let p = tmpTrans.getOrigin();
+			let q = tmpTrans.getRotation();
+			objThree.position.set(p.x(), p.y(), p.z());
+			objThree.quaternion.set(q.x(), q.y(), q.z(), q.w());
+		}
+
+	}
+}
+
+
