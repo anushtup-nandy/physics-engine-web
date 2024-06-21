@@ -28,26 +28,6 @@ function setupPhysicsWorld()
 	physicsWorld.setGravity(new Ammo.btVector3(0, -10, 0));
 }
 
-function setupGraphics()
-{
-	//clock
-	clock = new THREE.Clock();
-	//scene
-	scene = new THREE.Scene();
-	scene.background = new THREE.Color(0xabfeff);
-	//camera
-	camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.2, 5000);
-	camera.position.set(0 , 20, 50);
-	camera.lookAt(new THREE.Vector3(0, 20, 0));
-	//add directional light
-	let hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.1 );
-                hemiLight.color.setHSL( 0.6, 0.6, 0.6 );
-                hemiLight.groundColor.setHSL( 0.1, 1, 0.4 );
-                hemiLight.position.set( 0, 50, 0 );
-                scene.add( hemiLight );
-	//add directional light
-}
-
 function setupGraphics() {
     // create clock for timing
     clock = new THREE.Clock();
@@ -57,9 +37,9 @@ function setupGraphics() {
     scene.background = new THREE.Color(0xbfd1e5);
 
     // create camera
-    camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.2, 5000);
+    camera = new THREE.PerspectiveCamera(80, window.innerWidth / window.innerHeight, 0.0001, 50000);
     camera.position.set(0, 30, 70);
-    camera.lookAt(new THREE.Vector3(0, 0, 0));
+    camera.lookAt(new THREE.Vector3(0, 20, 0));
 
     // Add hemisphere light
     let hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.1);
@@ -117,7 +97,7 @@ function renderFrame()
 	}
 	updatePhysics(deltaTime);
 	renderer.render(scene, camera);
-	requestAnimationframe(renderFrame);
+	requestAnimationFrame( renderFrame );
 }
 
 function setupEventHandlers()
@@ -137,7 +117,7 @@ function onMouseDown(event)
 {
 	if (ballInWorld) return;
 	mouseCoords.set((event.clientX/window.innerWidth)*2 -1, -(event.clientY/window.innerHeight)*2 + 1);
-	raycaster.setFromCamera(mousrCoords, camera);
+	raycaster.setFromCamera(mouseCoords, camera);
 
 	//create ball
 	pos.copy(raycaster.ray.direction);
@@ -191,8 +171,7 @@ function createWall(){
 	const gridHelper = new THREE.GridHelper(50, 50, 0x1111aa, 0xaa1111);
 
         scene.add( gridHelper );
-
-        ridHelper.rotateX( THREE.Math.degToRad(90));
+        gridHelper.rotateX( THREE.Math.degToRad(90));
         gridHelper.position.y = 25;
 	gridHelper.position.z = -14;
 
@@ -254,5 +233,3 @@ function updatePhysics(deltaTime)
 
 	}
 }
-
-
