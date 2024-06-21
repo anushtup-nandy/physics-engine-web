@@ -235,7 +235,7 @@ function updatePhysics(deltaTime)
 	physicsWorld.stepSimulation(deltaTime, 10);
 	for (let i = 0; i < rigidBodies.length; i++)
 	{
-		let objTree = rigidBodies[i];
+		let objThree = rigidBodies[i];
 		let objAmmo = objThree.userData.physicsBody;
 		let ms = objAmmo.getMotionState();
 		if (ms)
