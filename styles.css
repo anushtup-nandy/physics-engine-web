@@ -1,0 +1,27 @@
+body {
+    margin: 0;
+    display: flex;
+}
+
+.sidebar {
+    width: 200px;
+    background: #2c3e50;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+}
+
+.sidebar button {
+    margin: 10px 0;
+    padding: 10px;
+    background: #34495e;
+    border: none;
+    color: white;
+    cursor: pointer;
+}
+
+#threejs-container {
+    flex: 1;
+    position: relative;
+}
