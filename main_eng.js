@@ -1,11 +1,14 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/Addons.js';
-import * as dat from 'dat.gui';
+import { DragControls } from 'three/DragControls';
+// import * as dat from 'dat.gui';
 
 let physicsWorld, scene, camera, renderer, clock, gridHelper, axeshelper;
 let rigidBodies = [], tmpTrans = null;
-let orbitControls, gui, raycaster, mouse, moveMouse, draggable,selectedObject = null, offset = new THREE.Vector3();
+let orbitControls, gui, raycaster, mouse, moveMouse, draggable = null,selectedObject = null, offset = new THREE.Vector3();
 let isDragging = false;
+let dragControls;
+let draggableObjects = [];
 
 Ammo().then(start);
 
@@ -82,7 +85,8 @@ function setupGraphics() {
     raycaster = new THREE.Raycaster();
     mouse = new THREE.Vector2(); //x and y position of mouse
     moveMouse = new THREE.Vector2(); //will contain information regarding last mouse movement
-    draggable = new THREE.Object3D; //contains the last selected object to drag
+    // draggable = new THREE.Object; //contains the last selected object to drag
+    dragControls = new DragControls(draggableObjects, camera, renderer.domElement);
 
     axeshelper = new THREE.AxesHelper(10);
     scene.add(axeshelper);
@@ -90,75 +94,101 @@ function setupGraphics() {
     scene.add(gridHelper);
 }
 
+// function setupEventHandlers() {
+//     document.getElementById('addBall').addEventListener('click', createBall);
+//     document.getElementById('addBlock').addEventListener('click', createBlock);
+//     window.addEventListener('resize', onWindowResize);
+//     window.addEventListener('mousedown', onMouseDown);
+//     window.addEventListener('mousemove', onMouseMove);
+//     window.addEventListener('mouseup', onMouseUp);
+// }
+
 function setupEventHandlers() {
     document.getElementById('addBall').addEventListener('click', createBall);
     document.getElementById('addBlock').addEventListener('click', createBlock);
     window.addEventListener('resize', onWindowResize);
-    // window.addEventListener('click', onClickEvent);
     window.addEventListener('mousedown', onMouseDown);
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
 
+    // Initialize DragControls
+    dragControls.addEventListener('dragstart', onDragStart);
+    dragControls.addEventListener('dragend', onDragEnd);
+}
+
+function onDragStart(event) {
+    isDragging = true;
+    orbitControls.enabled = false; // Disable orbit controls while dragging
+    console.log(`Dragging object ${event.object.userData.tag}`);
+}
+
+function onDragEnd(event) {
+    isDragging = false;
+    orbitControls.enabled = true; // Enable orbit controls after dragging
+    console.log(`Stopped dragging object ${event.object.userData.tag}`);
 }
 
 function onMouseDown(event) {
+    event.preventDefault();
+
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
 
     raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObjects(scene.children);
+    const intersects = raycaster.intersectObjects(scene.children, true); // true to include descendants
 
-    if (intersects.length > 0 && intersects[0].object.userData.draggable) {
-        draggable = intersects[0].object;
-        isDragging = true;
-        orbitControls.enabled = false;
+    console.log('Mouse down at:', mouse);
+    console.log('Intersects:', intersects);
+
+    if (intersects.length > 0) {
+        intersects.forEach(intersect => {
+            console.log(`Object: ${intersect.object.name}, Draggable: ${intersect.object.userData.draggable}`);
+        });
+
+        // Ensure the correct check for the draggable property
+        if (intersects[0].object.userData.draggable === true) {
+            draggable = intersects[0].object;
+            isDragging = true;
+            console.log(`Dragging object ${draggable.userData.tag}`);
+            orbitControls.enabled = false; // Disable orbit controls while dragging
+        } else {
+            console.log('The object is not draggable.');
+        }
     }
 }
 
 function onMouseMove(event) {
-    if (isDragging) {
+    event.preventDefault(); // Prevent default browser actions
+
+    if (isDragging && draggable) {
         mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
 
         raycaster.setFromCamera(mouse, camera);
         const intersects = raycaster.intersectObject(gridHelper);
 
         if (intersects.length > 0) {
-            draggable.position.copy(intersects[0].point);
-            draggable.userData.physicsBody.setMotionState(new Ammo.btDefaultMotionState(new Ammo.btTransform().setFromOpenGLMatrix(new Float32Array(draggable.matrixWorld.elements))));
+            let intersectPoint = intersects[0].point;
+            draggable.position.copy(intersectPoint);
+
+            // Update the physics body position if present
+            if (draggable.userData.physicsBody) {
+                let transform = new Ammo.btTransform();
+                transform.setIdentity();
+                transform.setOrigin(new Ammo.btVector3(draggable.position.x, draggable.position.y, draggable.position.z));
+                draggable.userData.physicsBody.setWorldTransform(transform);
+            }
         }
     }
 }
 
-function onMouseUp(event) {
+function onMouseUp() {
     if (isDragging) {
         isDragging = false;
         draggable = null;
         orbitControls.enabled = true;
     }
-}
-
-// function onClickEvent(event)
-// {
-//     if (draggable)
-//     {
-//         console.log(`dropping draggable ${draggable.userData.name}`);
-//         draggable = null;
-//         return;
-//     }
-//     mouse.x = (event.clientX/window.innerWidth)*2-1;
-//     mouse.y = (event.clientY/window.innerHeight)*2-1;
-
-//     raycaster.setFromCamera(mouse, camera);
-//     const intersects = raycaster.intersectObjects( scene.children );
-
-//     if (intersects.length > 0 && intersects[0].object.userData.draggable)
-//     {
-//         draggable = interscts[0].object;
-//         console.log(`found draggable ${draggable.userData.name}`);
-
-//     }
-// }
+}   
 
 function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight;
@@ -176,7 +206,8 @@ function createBall() {
     ball.position.set(pos.x, pos.y, pos.z);
     ball.castShadow = true;
     ball.receiveShadow = true;
-    // ball.userData.tag = 'draggable';
+    ball.userData.draggable = true;
+    ball.userData.tag = "BALL";
     scene.add(ball);
 
     let transform = new Ammo.btTransform();
@@ -198,10 +229,9 @@ function createBall() {
     physicsWorld.addRigidBody(body);
     // rigidBodies.push(ball);
     rigidBodies.push({ threeObject: ball, ammoBody: body });
-
+    draggableObjects.push(ball);
     ball.userData.physicsBody = body;
-    ball.userData.draggable = true;
-    ball.userData.name = "BALL";
+    
     body.threeObject = ball;
 }
 
@@ -214,7 +244,9 @@ function createBlock() {
     let block = new THREE.Mesh(new THREE.BoxGeometry(scale.x, scale.y, scale.z), new THREE.MeshPhongMaterial({ color: 0x00ff00 }));
     block.position.set(pos.x, pos.y, pos.z);
     block.castShadow = true;
-    block.receiveShadow = true; 
+    block.receiveShadow = true;
+    block.userData.draggable = true;
+    block.userData.tag = "BLOCK";
     scene.add(block);
 
     let transform = new Ammo.btTransform();
@@ -236,10 +268,10 @@ function createBlock() {
     physicsWorld.addRigidBody(body);
     // rigidBodies.push(block);
     rigidBodies.push({ threeObject: block, ammoBody: body });
+    draggableObjects.push(block);
 
     block.userData.physicsBody = body;
-    block.userData.draggable = true;
-    block.userData.name = "BLOCK";
+    
     body.threeObject = block;
 }
 
