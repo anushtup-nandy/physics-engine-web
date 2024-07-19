@@ -8,7 +8,7 @@ Goal is to make this into a plug and play website avoiding most if not all codin
 - [x] simple grid like plane 
 - [x] collision detection
 - [ ] Bouncing effect when objects are spawned
-- [ ] being able to move camera around
+- [x] being able to move camera around
 - [ ] images to show block and ball
 - [ ] Drag around objects
 - [ ] Specify object dimensions

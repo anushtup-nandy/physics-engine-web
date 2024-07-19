@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "ammo.js": "github:kripken/ammo.js",
+    "dat.gui": "^0.7.9",
     "three": "^0.166.1"
   }
 }

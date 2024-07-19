@@ -1,7 +1,11 @@
 import * as THREE from 'three';
+import { OrbitControls } from 'three/Addons.js';
+import * as dat from 'dat.gui';
 
 let physicsWorld, scene, camera, renderer, clock, gridHelper, axeshelper;
 let rigidBodies = [], tmpTrans = null;
+let orbitControls, gui, raycaster, mouse, moveMouse, draggable,selectedObject = null, offset = new THREE.Vector3();
+let isDragging = false;
 
 Ammo().then(start);
 
@@ -36,6 +40,7 @@ function setupPhysicsWorld() {
     let rbInfo = new Ammo.btRigidBodyConstructionInfo(groundMass, motionState, groundShape, localInertia);
 
     let groundBody = new Ammo.btRigidBody(rbInfo);
+    // groundBody.userData.ground = true;
     physicsWorld.addRigidBody(groundBody);
 }
 
@@ -70,8 +75,17 @@ function setupGraphics() {
     document.getElementById('threejs-container').appendChild(renderer.domElement);
     renderer.shadowMap.enabled = true;
 
-    // axeshelper = new THREE.AxesHelper(100);
-    // scene.add(axeshelper);
+    //orbitcontrols
+    orbitControls = new OrbitControls(camera, renderer.domElement);
+    
+    //raycaster
+    raycaster = new THREE.Raycaster();
+    mouse = new THREE.Vector2(); //x and y position of mouse
+    moveMouse = new THREE.Vector2(); //will contain information regarding last mouse movement
+    draggable = new THREE.Object3D; //contains the last selected object to drag
+
+    axeshelper = new THREE.AxesHelper(10);
+    scene.add(axeshelper);
     gridHelper = new THREE.GridHelper(100, 100);
     scene.add(gridHelper);
 }
@@ -80,7 +94,71 @@ function setupEventHandlers() {
     document.getElementById('addBall').addEventListener('click', createBall);
     document.getElementById('addBlock').addEventListener('click', createBlock);
     window.addEventListener('resize', onWindowResize);
+    // window.addEventListener('click', onClickEvent);
+    window.addEventListener('mousedown', onMouseDown);
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+
 }
+
+function onMouseDown(event) {
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(scene.children);
+
+    if (intersects.length > 0 && intersects[0].object.userData.draggable) {
+        draggable = intersects[0].object;
+        isDragging = true;
+        orbitControls.enabled = false;
+    }
+}
+
+function onMouseMove(event) {
+    if (isDragging) {
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObject(gridHelper);
+
+        if (intersects.length > 0) {
+            draggable.position.copy(intersects[0].point);
+            draggable.userData.physicsBody.setMotionState(new Ammo.btDefaultMotionState(new Ammo.btTransform().setFromOpenGLMatrix(new Float32Array(draggable.matrixWorld.elements))));
+        }
+    }
+}
+
+function onMouseUp(event) {
+    if (isDragging) {
+        isDragging = false;
+        draggable = null;
+        orbitControls.enabled = true;
+    }
+}
+
+// function onClickEvent(event)
+// {
+//     if (draggable)
+//     {
+//         console.log(`dropping draggable ${draggable.userData.name}`);
+//         draggable = null;
+//         return;
+//     }
+//     mouse.x = (event.clientX/window.innerWidth)*2-1;
+//     mouse.y = (event.clientY/window.innerHeight)*2-1;
+
+//     raycaster.setFromCamera(mouse, camera);
+//     const intersects = raycaster.intersectObjects( scene.children );
+
+//     if (intersects.length > 0 && intersects[0].object.userData.draggable)
+//     {
+//         draggable = interscts[0].object;
+//         console.log(`found draggable ${draggable.userData.name}`);
+
+//     }
+// }
 
 function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight;
@@ -98,6 +176,7 @@ function createBall() {
     ball.position.set(pos.x, pos.y, pos.z);
     ball.castShadow = true;
     ball.receiveShadow = true;
+    // ball.userData.tag = 'draggable';
     scene.add(ball);
 
     let transform = new Ammo.btTransform();
@@ -117,9 +196,12 @@ function createBall() {
     body.setFriction(4);
     body.setRollingFriction(10);
     physicsWorld.addRigidBody(body);
-    rigidBodies.push(ball);
+    // rigidBodies.push(ball);
+    rigidBodies.push({ threeObject: ball, ammoBody: body });
 
     ball.userData.physicsBody = body;
+    ball.userData.draggable = true;
+    ball.userData.name = "BALL";
     body.threeObject = ball;
 }
 
@@ -132,7 +214,7 @@ function createBlock() {
     let block = new THREE.Mesh(new THREE.BoxGeometry(scale.x, scale.y, scale.z), new THREE.MeshPhongMaterial({ color: 0x00ff00 }));
     block.position.set(pos.x, pos.y, pos.z);
     block.castShadow = true;
-    block.receiveShadow = true;
+    block.receiveShadow = true; 
     scene.add(block);
 
     let transform = new Ammo.btTransform();
@@ -152,9 +234,12 @@ function createBlock() {
     body.setFriction(4);
     body.setRollingFriction(10);
     physicsWorld.addRigidBody(body);
-    rigidBodies.push(block);
+    // rigidBodies.push(block);
+    rigidBodies.push({ threeObject: block, ammoBody: body });
 
     block.userData.physicsBody = body;
+    block.userData.draggable = true;
+    block.userData.name = "BLOCK";
     body.threeObject = block;
 }
 
@@ -162,8 +247,10 @@ function updatePhysics(deltaTime) {
     physicsWorld.stepSimulation(deltaTime, 10);
 
     for (let i = 0; i < rigidBodies.length; i++) {
-        let objThree = rigidBodies[i];
-        let objAmmo = objThree.userData.physicsBody;
+        // let objThree = rigidBodies[i];
+        // let objAmmo = objThree.userData.physicsBody;
+        let objThree = rigidBodies[i].threeObject;
+        let objAmmo = rigidBodies[i].ammoBody;
         let ms = objAmmo.getMotionState();
         if (ms) {
             ms.getWorldTransform(tmpTrans);
@@ -200,8 +287,11 @@ function setupCollisionDetection() {
 
 function renderFrame() {
     let deltaTime = clock.getDelta();
+    // fPControls.update(deltaTime);
+    orbitControls.update(deltaTime);
     updatePhysics(deltaTime);
     setupCollisionDetection();
     renderer.render(scene, camera);
-    requestAnimationFrame(renderFrame);
+    // requestAnimationFrame(renderFrame);
+    renderer.setAnimationLoop(renderFrame);
 }
