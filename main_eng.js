@@ -1,4 +1,6 @@
-let physicsWorld, scene, camera, renderer, clock, gridHelper;
+import * as THREE from 'three';
+
+let physicsWorld, scene, camera, renderer, clock, gridHelper, axeshelper;
 let rigidBodies = [], tmpTrans = null;
 
 Ammo().then(start);
@@ -68,20 +70,10 @@ function setupGraphics() {
     document.getElementById('threejs-container').appendChild(renderer.domElement);
     renderer.shadowMap.enabled = true;
 
+    // axeshelper = new THREE.AxesHelper(100);
+    // scene.add(axeshelper);
     gridHelper = new THREE.GridHelper(100, 100);
     scene.add(gridHelper);
-}
-
-function renderFrame() {
-    // let deltaTime = clock.getDelta();
-    // updatePhysics(deltaTime);
-    // renderer.render(scene, camera);
-    // requestAnimationFrame(renderFrame);
-    let deltaTime = clock.getDelta();
-    updatePhysics(deltaTime);
-    setupCollisionDetection();
-    renderer.render(scene, camera);
-    requestAnimationFrame(renderFrame);
 }
 
 function setupEventHandlers() {

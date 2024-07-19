@@ -1,0 +1,27 @@
+{
+  "name": "physics-engine-web",
+  "version": "1.0.0",
+  "description": "Web based multibody physics engine used to simulate robots over the web. Uses *Ammo.js* (JS port of bullet) and *Three.js*.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/anushtup-nandy/physics-engine-web.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/anushtup-nandy/physics-engine-web/issues"
+  },
+  "homepage": "https://github.com/anushtup-nandy/physics-engine-web#readme",
+  "devDependencies": {
+    "vite": "^5.3.4"
+  },
+  "dependencies": {
+    "ammo.js": "github:kripken/ammo.js",
+    "three": "^0.166.1"
+  }
+}
