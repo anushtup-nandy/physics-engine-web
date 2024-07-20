@@ -4,17 +4,17 @@ body {
 }
 
 .sidebar {
-    width: 200px;
+    width: 500px;
     background: #2c3e50;
     color: white;
     display: flex;
     flex-direction: column;
-    padding: 10px;
+    padding: 50px;
 }
 
 .sidebar button {
-    margin: 10px 0;
-    padding: 10px;
+    margin: 50px 0;
+    padding: 20px;
     background: #34495e;
     border: none;
     color: white;

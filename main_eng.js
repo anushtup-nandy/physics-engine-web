@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/Addons.js';
 import { DragControls } from 'three/DragControls';
-import {createBall, createBlock} from '/src/rigidbodies.js';
+import {Ball, Block} from '/src/rigidbodies.js';
 import * as dat from 'dat.gui';
 
 let physicsWorld, scene, camera, renderer, clock, gridHelper, axeshelper;
@@ -11,6 +11,14 @@ let isDragging = false;
 let dragControls;
 let draggableObjects = [];
 let gui;
+let selectedObject = null;
+let selectedParams = {
+    color: '#ffffff',
+    radius: 1,
+    width: 1,
+    height: 1,
+    depth: 1
+};
 
 Ammo().then(start);
 
@@ -96,11 +104,88 @@ function setupGraphics() {
 }
 
 function setupEventHandlers() {
-    // document.getElementById('addBall').addEventListener('click', createBall);
-    // document.getElementById('addBlock').addEventListener('click', createBlock);
-    document.getElementById('addBall').addEventListener('click', () => createBall(physicsWorld, draggableObjects, rigidBodies, scene));
-    document.getElementById('addBlock').addEventListener('click', () => createBlock(physicsWorld, draggableObjects, rigidBodies, scene));
+    document.getElementById('addBall').addEventListener('click', () => {
+        const ball = new Ball(physicsWorld, draggableObjects, rigidBodies, scene, {
+            x: 0, y: 10, z: 0,
+            radius: 1.5,
+            color: '#800080'
+        });
+        ball.create();
+    });
+
+    document.getElementById('addBlock').addEventListener('click', () => {
+        const block = new Block(physicsWorld, draggableObjects, rigidBodies, scene, {
+            x: 0, y: 10, z: 0,
+            width: 2, height: 2, depth: 2,
+            color: '#00ff00'
+        });
+        block.create();
+    });
+
     window.addEventListener('resize', onWindowResize);
+}
+
+function setupGUI() {
+    gui = new dat.GUI();
+
+    const objectFolder = gui.addFolder('Selected Object');
+
+    objectFolder.addColor(selectedParams, 'color').onChange((value) => {
+        if (selectedObject) {
+            selectedObject.material.color.set(value);
+        }
+    });
+
+    objectFolder.add(selectedParams, 'radius', 0.5, 5).onChange((value) => {
+        if (selectedObject && selectedObject.userData.tag === 'BALL') {
+            selectedObject.scale.set(value, value, value);
+            selectedObject.userData.physicsBody.setCollisionShape(new Ammo.btSphereShape(value / 2));
+            selectedObject.userData.physicsBody.activate();
+        }
+    }).listen();
+
+    objectFolder.add(selectedParams, 'width', 0.5, 5).onChange((value) => {
+        if (selectedObject && selectedObject.userData.tag === 'BLOCK') {
+            selectedObject.scale.x = value;
+            selectedObject.userData.physicsBody.setCollisionShape(new Ammo.btBoxShape(new Ammo.btVector3(value / 2, selectedObject.scale.y / 2, selectedObject.scale.z / 2)));
+            selectedObject.userData.physicsBody.activate();
+        }
+    }).listen();
+
+    objectFolder.add(selectedParams, 'height', 0.5, 5).onChange((value) => {
+        if (selectedObject && selectedObject.userData.tag === 'BLOCK') {
+            selectedObject.scale.y = value;
+            selectedObject.userData.physicsBody.setCollisionShape(new Ammo.btBoxShape(new Ammo.btVector3(selectedObject.scale.x / 2, value / 2, selectedObject.scale.z / 2)));
+            selectedObject.userData.physicsBody.activate();
+        }
+    }).listen();
+
+    objectFolder.add(selectedParams, 'depth', 0.5, 5).onChange((value) => {
+        if (selectedObject && selectedObject.userData.tag === 'BLOCK') {
+            selectedObject.scale.z = value;
+            selectedObject.userData.physicsBody.setCollisionShape(new Ammo.btBoxShape(new Ammo.btVector3(selectedObject.scale.x / 2, selectedObject.scale.y / 2, value / 2)));
+            selectedObject.userData.physicsBody.activate();
+        }
+    }).listen();
+
+    objectFolder.open();
+
+    dragControls.addEventListener('hoveron', function (event) {
+        selectedObject = event.object;
+        selectedParams.color = `#${selectedObject.material.color.getHexString()}`;
+        if (selectedObject.userData.tag === 'BALL') {
+            selectedParams.radius = selectedObject.scale.x;
+        } else if (selectedObject.userData.tag === 'BLOCK') {
+            selectedParams.width = selectedObject.scale.x;
+            selectedParams.height = selectedObject.scale.y;
+            selectedParams.depth = selectedObject.scale.z;
+        }
+        gui.updateDisplay();
+    });
+
+    dragControls.addEventListener('hoveroff', function () {
+        selectedObject = null;
+    });
 }
 
 function onDragStart(event) {
@@ -171,61 +256,6 @@ function setupCollisionDetection() {
             }
         }
     }
-}
-
-function setupGUI() {
-    gui = new dat.GUI();
-
-    let ballFolder = gui.addFolder('Ball');
-    ballFolder.add({ add: () => createBall(physicsWorld, draggableObjects, rigidBodies, scene) }, 'add').name('Add Ball');
-
-    let blockFolder = gui.addFolder('Block');
-    blockFolder.add({ add: () => createBlock(physicsWorld, draggableObjects, rigidBodies, scene) }, 'add').name('Add Block');
-
-    ballFolder.open();
-    blockFolder.open();
-
-    // Add properties to edit ball
-    let ballParams = {
-        radius: 1.5,
-        color: '#800080'
-    };
-
-    ballFolder.add(ballParams, 'radius', 0.5, 5).onChange((value) => {
-        // Update the ball radius logic here
-        ballParams.radius = value;
-    });
-
-    ballFolder.addColor(ballParams, 'color').onChange((value) => {
-        // Update the ball color logic here
-        ballParams.color = value;
-    });
-
-    ballFolder.open();
-
-    // Add properties to edit block
-    let blockParams = {
-        width: 2,
-        height: 2,
-        depth: 2,
-        color: '#00ff00'
-    };
-
-    blockFolder.add(blockParams, 'width', 0.5, 5).onChange((value) => {
-        // Update the block width logic here
-    });
-
-    blockFolder.add(blockParams, 'height', 0.5, 5).onChange((value) => {
-        // Update the block height logic here
-    });
-
-    blockFolder.add(blockParams, 'depth', 0.5, 5).onChange((value) => {
-        // Update the block depth logic here
-    });
-
-    blockFolder.addColor(blockParams, 'color').onChange((value) => {
-        // Update the block color logic here
-    });
 }
 
 function renderFrame() {
