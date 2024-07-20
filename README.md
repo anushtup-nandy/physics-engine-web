@@ -10,7 +10,7 @@ Goal is to make this into a plug and play website avoiding most if not all codin
 - [ ] Bouncing effect when objects are spawned
 - [x] being able to move camera around
 - [ ] images to show block and ball
-- [ ] Drag around objects
+- [x] Drag around objects
 - [ ] Specify object dimensions
 - [ ] being able to spawn more complex objects (for example rc car)
 
