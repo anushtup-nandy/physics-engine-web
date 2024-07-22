@@ -14,7 +14,7 @@ Goal is to make this into a plug and play website avoiding most if not all codin
 - [x] Abstract block and ball code
 - [ ] Specify object dimensions
 - [ ] being able to spawn more complex objects (URDF)
-- [ ] Abstract GUI interface
+- [ ] Abstract GUI interface (DEBUGGING - it isn't able to alter the color/dimensions however it does select!)
 - [ ] 
 
 ## How to use:

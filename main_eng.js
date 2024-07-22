@@ -125,6 +125,7 @@ function setupEventHandlers() {
     window.addEventListener('resize', onWindowResize);
 }
 
+//NOT WORKING!!
 function setupGUI() {
     gui = new dat.GUI();
 
