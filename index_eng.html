@@ -35,13 +35,13 @@
                     <label for="color">Color:</label>
                     <input type="color" id="color" name="color" value="#ffffff">
                     <label for="width">Width/Radius:</label>
-                    <input type="range" id="width" name="width" min="0.1" max="10" step="0.1" value="1">
+                    <input type="range" id="width" class="slider" name="width" min="0.1" max="10" step="0.1" value="1">
                     <span id="widthValue">1</span>
                     <label for="height">Height:</label>
-                    <input type="range" id="height" name="height" min="0.1" max="10" step="0.1" value="1">
+                    <input type="range" id="height" class="slider" name="height" min="0.1" max="10" step="0.1" value="1">
                     <span id="heightValue">1</span>
                     <label for="depth">Depth:</label>
-                    <input type="range" id="depth" name="depth" min="0.1" max="10" step="0.1" value="1">
+                    <input type="range" id="depth" class="slider" name="depth" min="0.1" max="10" step="0.1" value="1">
                     <span id="depthValue">1</span>
                 </div>
                 <div class="popup-buttons">
@@ -63,6 +63,6 @@
         }
     </script>
     <script src = "/node_modules/ammo.js/builds/ammo.wasm.js"></script>
-    <script src="/main_eng.js" type = "module"></script>
+    <script src="/main_eng.js" type = "module" defer></script>
 </body>
 </html>

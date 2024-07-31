@@ -9,9 +9,6 @@ let orbitControls, raycaster, mouse, moveMouse;
 let isDragging = false;
 let dragControls;
 let draggableObjects = [];
-let gui;
-let selectedObject = null;
-// Initialize preview variables
 let previewScene, previewCamera, previewRenderer, previewObject;
 let selectedParams = {
     color: '#ffffff',
@@ -104,87 +101,6 @@ function setupGraphics() {
     scene.add(gridHelper);
 }
 
-function setupPreview() {
-    previewScene = new THREE.Scene();
-
-    const ambientLight = new THREE.AmbientLight(0x404040);
-    previewScene.add(ambientLight);
-
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-    directionalLight.position.set(1, 1, 1).normalize();
-    previewScene.add(directionalLight);
-
-    previewCamera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
-    previewCamera.position.set(0, 0, 5);
-
-    previewRenderer = new THREE.WebGLRenderer();
-    previewRenderer.setPixelRatio(window.devicePixelRatio);
-    
-    const pvCont = document.getElementById('previewContainer');
-    pvCont.appendChild(previewRenderer.domElement);
-
-    // Initially set the renderer size
-    resizePreviewRenderer();
-
-    // Force a reflow after a small delay to ensure visibility
-    setTimeout(() => {
-        resizePreviewRenderer();
-    }, 100);
-
-    updatePreview();
-}
-
-function resizePreviewRenderer() {
-    const pvCont = document.getElementById('previewContainer');
-    if (previewRenderer && pvCont) {
-        const width = pvCont.clientWidth;
-        const height = pvCont.clientHeight;
-        previewRenderer.setSize(width, height);
-        previewCamera.aspect = width / height;
-        previewCamera.updateProjectionMatrix();
-    }
-}
-
-// Event listener for window resize
-window.addEventListener('resize', () => {
-    resizePreviewRenderer();
-    onWindowResize();
-});
-
-
-
-function updatePreview() {
-    const objectType = document.getElementById('objectType').value;
-    const color = document.getElementById('color').value;
-    const width = parseFloat(document.getElementById('width').value);
-    const height = parseFloat(document.getElementById('height').value);
-    const depth = parseFloat(document.getElementById('depth').value);
-
-    document.getElementById('widthValue').textContent = width;
-    document.getElementById('heightValue').textContent = height;
-    document.getElementById('depthValue').textContent = depth;
-
-    // Clear previous preview object
-    if (previewObject) {
-        previewScene.remove(previewObject);
-    }
-
-    let geometry;
-    if (objectType === 'Ball') {
-        geometry = new THREE.SphereGeometry(width, 32, 32);
-    } else if (objectType === 'Block') {
-        geometry = new THREE.BoxGeometry(width, height, depth);
-    }
-
-    const material = new THREE.MeshStandardMaterial({ color });
-    previewObject = new THREE.Mesh(geometry, material);
-    previewScene.add(previewObject);
-
-    // Render the scene
-    previewRenderer.render(previewScene, previewCamera);
-}
-
-
 function setupEventHandlers() {
     document.getElementById('addBall').addEventListener('click', () => {
         const ball = new Ball(physicsWorld, draggableObjects, rigidBodies, scene, {
@@ -249,14 +165,81 @@ function setupEventHandlers() {
         });
     });
 
-    // Ensure the renderer is resized correctly on initial load
-    document.addEventListener('DOMContentLoaded', () => {
-        setupPreview();
-        resizePreviewRenderer();
-    });
-    
     window.addEventListener('resize', onWindowResize);
 }
+
+function setupPreview() {
+    previewScene = new THREE.Scene();
+
+    const ambientLight = new THREE.AmbientLight(0x404040);
+    previewScene.add(ambientLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight.position.set(1, 1, 1).normalize();
+    previewScene.add(directionalLight);
+
+    previewCamera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+    previewCamera.position.set(0, 0, 5);
+
+    previewRenderer = new THREE.WebGLRenderer();
+    previewRenderer.setPixelRatio(window.devicePixelRatio);
+
+    const pvCont = document.getElementById('previewContainer');
+    pvCont.appendChild(previewRenderer.domElement);
+
+    // Ensure renderer size is correct after append
+    requestAnimationFrame(() => {
+        resizePreviewRenderer();
+        updatePreview();
+    });
+}
+
+function resizePreviewRenderer() {
+    const pvCont = document.getElementById('previewContainer');
+    const width = pvCont.clientWidth;
+    const height = pvCont.clientHeight;
+    previewRenderer.setSize(width, height);
+    previewCamera.aspect = width / height;
+    previewCamera.updateProjectionMatrix();
+}
+
+window.addEventListener('resize', () => {
+    resizePreviewRenderer();
+    onWindowResize();
+});
+
+function updatePreview() {
+    const objectType = document.getElementById('objectType').value;
+    const color = document.getElementById('color').value;
+    const width = parseFloat(document.getElementById('width').value);
+    const height = parseFloat(document.getElementById('height').value);
+    const depth = parseFloat(document.getElementById('depth').value);
+
+    document.getElementById('widthValue').textContent = width;
+    document.getElementById('heightValue').textContent = height;
+    document.getElementById('depthValue').textContent = depth;
+
+    // Clear previous preview object
+    if (previewObject) {
+        previewScene.remove(previewObject);
+    }
+
+    let geometry;
+    if (objectType === 'Ball') {
+        geometry = new THREE.SphereGeometry(width, 32, 32);
+    } else if (objectType === 'Block') {
+        geometry = new THREE.BoxGeometry(width, height, depth);
+    }
+
+    const material = new THREE.MeshStandardMaterial({ color });
+    previewObject = new THREE.Mesh(geometry, material);
+    previewScene.add(previewObject);
+
+    // Render the scene
+    previewRenderer.render(previewScene, previewCamera);
+}
+
+
 
 function onDragStart(event) {
     isDragging = true;
@@ -335,6 +318,5 @@ function renderFrame() {
     setupCollisionDetection();
     renderer.render(scene, camera);
     previewRenderer.render(previewScene, previewCamera); // Render preview
-    // renderer.setAnimationLoop(renderFrame);
     requestAnimationFrame(renderFrame);
 }
