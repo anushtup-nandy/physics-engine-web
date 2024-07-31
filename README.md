@@ -15,7 +15,9 @@ Goal is to make this into a plug and play website avoiding most if not all codin
 - [x] Specify object dimensions
 - [x] Abstract GUI interface (DEBUGGING - GUI does not come initially, for some reason it only comes after clicking on inspect)
 - [ ] being able to spawn more complex objects (URDF)
-- [ ] 
+- [ ] Improve sizing of the webpage
+- [ ] Make the side-bar prettier
+- [ ] Link GUI to all buttons
 
 ## How to use:
  * `git clone <ssh or https>` to get the repo locally
