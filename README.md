@@ -12,9 +12,9 @@ Goal is to make this into a plug and play website avoiding most if not all codin
 - [x] images to show block and ball
 - [x] Drag around objects
 - [x] Abstract block and ball code
-- [ ] Specify object dimensions
-- [ ] being able to spawn more complex objects (URDF)
+- [x] Specify object dimensions
 - [x] Abstract GUI interface (DEBUGGING - GUI does not come initially, for some reason it only comes after clicking on inspect)
+- [ ] being able to spawn more complex objects (URDF)
 - [ ] 
 
 ## How to use:
