@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/anushtup-nandy/physics-engine-web#readme",
   "devDependencies": {
+    "lil-gui": "^0.19.2",
     "vite": "^5.3.4"
   },
   "dependencies": {

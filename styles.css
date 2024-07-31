@@ -1,32 +1,153 @@
+/* General styling */
 body {
     margin: 0;
     display: flex;
+    font-family: Arial, sans-serif;
 }
 
+/* Sidebar styling */
 .sidebar {
-    width: 500px;
+    width: 300px;
     background: #2c3e50;
     color: white;
     display: flex;
     flex-direction: column;
-    padding: 50px;
+    padding: 20px;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar h3 {
+    margin-top: 0;
+    font-size: 24px;
 }
 
 .sidebar button {
-    margin: 50px 0;
-    padding: 20px;
+    margin: 20px 0;
+    padding: 15px;
     background: #34495e;
     border: none;
     color: white;
     cursor: pointer;
+    border-radius: 5px;
+    font-size: 16px;
+    text-align: center;
 }
 
-.image-button img {
-    width: 50px;
-    height: 50px;
+.sidebar button img {
+    width: 40px;
+    height: 40px;
 }
 
-#threejs-container {
-    flex: 1;
+/* Popup styling */
+.popup {
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 100;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(15, 15, 15, 0.6); /* Translucent background */
+}
+
+.popup-content {
+    display: flex;
+    flex-direction: column;
+    background-color: rgba(0, 0, 0, 0.4);
+    margin: 10% auto; /* Reduce top margin */
+    padding: 15px;
+    border: 1px solid #888;
+    width: 60%; /* Reduce width */
+    max-width: 500px; /* Reduce max-width */
     position: relative;
+    border-radius: 10px;
+    color: white;
+    box-sizing: border-box; /* Ensure padding and border are included in width/height */
+}
+
+.popup-content h2 {
+    margin-top: 0;
+    font-size: 20px; /* Slightly smaller font size */
+    text-align: center;
+}
+
+.popup-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+}
+
+.popup-buttons button, .popup-buttons .close {
+    background: #16d8db;
+    color: #ffffff;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.popup-buttons .close:hover {
+    background: #c0392b; /* Darker color on hover */
+}
+
+.popup-buttons .add:hover {
+    background: #c0392b;
+}
+
+.popup-buttons button {
+    margin-left: 10px;
+}
+
+/* Dimension controls styling */
+.dimension-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.dimension-controls label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dimension-controls input[type="number"], .dimension-controls input[type="range"] {
+    flex: 1;
+}
+
+.dimension-controls input[type="range"] {
+    width: calc(100% - 50px); /* Adjust width for slider */
+}
+
+.dimension-controls input[type="number"] {
+    width: 50px; /* Width for number input */
+}
+
+/* Slider value styling */
+span {
+    display: block;
+    margin-top: 5px;
+    font-size: 14px;
+}
+
+button[type="submit"] {
+    background: #16d8db;
+    color: rgb(255, 255, 255);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+#previewContainer {
+    display: block; 
+    width: 100%;
+    height: 200px;  
+    background-color: rgba(0, 0, 0, 0.5); /* Example background color for visibility */
+    margin-bottom: 20px; /* Space between preview container and form */
+    position: relative; /* Ensure proper positioning */
+    overflow: auto; /* Hide any overflow */
 }

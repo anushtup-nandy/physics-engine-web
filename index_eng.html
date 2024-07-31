@@ -8,14 +8,49 @@
 </head>
 <body>
     <div class="sidebar">
+        <h3>Rigid Bodies</h3>
         <button id="addBall" class="image-button">
             <img src="./resources/ball.jpeg" alt="Add Ball">
         </button>
         <button id="addBlock" class="image-button">
             <img src="./resources/box.png" alt="Add Block">
         </button>
+        <button id="customizeButton" class="image-button">
+            Customize Ball/Block
+        </button>
     </div>
     <div id="threejs-container"></div> <!-- Add this div for the Three.js canvas -->
+     <!-- Popup for customization -->
+     <div id="customizePopup" class="popup">
+        <div class="popup-content">
+            <h2>Customize Object</h2>
+            <div id="previewContainer"></div> <!-- Preview area -->
+            <form id="customizeForm">
+                <div class="dimension-controls">
+                    <label for="objectType">Object Type:</label>
+                    <select id="objectType">
+                        <option value="Ball">Ball</option>
+                        <option value="Block">Block</option>
+                    </select>
+                    <label for="color">Color:</label>
+                    <input type="color" id="color" name="color" value="#ffffff">
+                    <label for="width">Width/Radius:</label>
+                    <input type="range" id="width" name="width" min="0.1" max="10" step="0.1" value="1">
+                    <span id="widthValue">1</span>
+                    <label for="height">Height:</label>
+                    <input type="range" id="height" name="height" min="0.1" max="10" step="0.1" value="1">
+                    <span id="heightValue">1</span>
+                    <label for="depth">Depth:</label>
+                    <input type="range" id="depth" name="depth" min="0.1" max="10" step="0.1" value="1">
+                    <span id="depthValue">1</span>
+                </div>
+                <div class="popup-buttons">
+                    <button type="submit" class="add">Add Object</button>
+                    <button type="button" class="close">Close</button>
+                </div>
+            </form>
+        </div>
+    </div>
     <script type = "importmap">
         {
             "imports":{
@@ -23,7 +58,7 @@
                 "three/Addons.js":"/node_modules/three/examples/jsm/Addons.js",
                 "three/FirstPersonControls": "/node_modules/three/examples/jsm/controls/FirstPersonControls.js",
                 "three/DragControls":"/node_modules/three/examples/jsm/controls/DragControls.js",
-                "dat.gui":"/node_modules/dat.gui/build/dat.gui.module.js"
+                "dat.gui":"/node_modules/dat.gui/build/dat.gui.module.js" 
             }
         }
     </script>

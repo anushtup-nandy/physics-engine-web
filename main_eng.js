@@ -2,7 +2,6 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/Addons.js';
 import { DragControls } from 'three/DragControls';
 import {Ball, Block} from '/src/rigidbodies.js';
-import * as dat from 'dat.gui';
 
 let physicsWorld, scene, camera, renderer, clock, gridHelper, axeshelper;
 let rigidBodies = [], tmpTrans = null;
@@ -12,6 +11,8 @@ let dragControls;
 let draggableObjects = [];
 let gui;
 let selectedObject = null;
+// Initialize preview variables
+let previewScene, previewCamera, previewRenderer, previewObject;
 let selectedParams = {
     color: '#ffffff',
     radius: 1,
@@ -27,7 +28,7 @@ function start() {
     setupPhysicsWorld();
     setupGraphics();
     setupEventHandlers();
-    setupGUI();
+    setupPreview();
     renderFrame();
 }
 
@@ -103,6 +104,87 @@ function setupGraphics() {
     scene.add(gridHelper);
 }
 
+function setupPreview() {
+    previewScene = new THREE.Scene();
+
+    const ambientLight = new THREE.AmbientLight(0x404040);
+    previewScene.add(ambientLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight.position.set(1, 1, 1).normalize();
+    previewScene.add(directionalLight);
+
+    previewCamera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+    previewCamera.position.set(0, 0, 5);
+
+    previewRenderer = new THREE.WebGLRenderer();
+    previewRenderer.setPixelRatio(window.devicePixelRatio);
+    
+    const pvCont = document.getElementById('previewContainer');
+    pvCont.appendChild(previewRenderer.domElement);
+
+    // Initially set the renderer size
+    resizePreviewRenderer();
+
+    // Force a reflow after a small delay to ensure visibility
+    setTimeout(() => {
+        resizePreviewRenderer();
+    }, 100);
+
+    updatePreview();
+}
+
+function resizePreviewRenderer() {
+    const pvCont = document.getElementById('previewContainer');
+    if (previewRenderer && pvCont) {
+        const width = pvCont.clientWidth;
+        const height = pvCont.clientHeight;
+        previewRenderer.setSize(width, height);
+        previewCamera.aspect = width / height;
+        previewCamera.updateProjectionMatrix();
+    }
+}
+
+// Event listener for window resize
+window.addEventListener('resize', () => {
+    resizePreviewRenderer();
+    onWindowResize();
+});
+
+
+
+function updatePreview() {
+    const objectType = document.getElementById('objectType').value;
+    const color = document.getElementById('color').value;
+    const width = parseFloat(document.getElementById('width').value);
+    const height = parseFloat(document.getElementById('height').value);
+    const depth = parseFloat(document.getElementById('depth').value);
+
+    document.getElementById('widthValue').textContent = width;
+    document.getElementById('heightValue').textContent = height;
+    document.getElementById('depthValue').textContent = depth;
+
+    // Clear previous preview object
+    if (previewObject) {
+        previewScene.remove(previewObject);
+    }
+
+    let geometry;
+    if (objectType === 'Ball') {
+        geometry = new THREE.SphereGeometry(width, 32, 32);
+    } else if (objectType === 'Block') {
+        geometry = new THREE.BoxGeometry(width, height, depth);
+    }
+
+    const material = new THREE.MeshStandardMaterial({ color });
+    previewObject = new THREE.Mesh(geometry, material);
+    previewScene.add(previewObject);
+
+    // Render the scene
+    previewRenderer.render(previewScene, previewCamera);
+}
+
+
 function setupEventHandlers() {
     document.getElementById('addBall').addEventListener('click', () => {
         const ball = new Ball(physicsWorld, draggableObjects, rigidBodies, scene, {
@@ -121,72 +203,59 @@ function setupEventHandlers() {
         });
         block.create();
     });
+    
+    document.getElementById('customizeButton').addEventListener('click', () => {
+        document.getElementById('customizePopup').style.display = 'block';
+    });
 
+    document.querySelector('.popup .close').addEventListener('click', () => {
+        document.getElementById('customizePopup').style.display = 'none';
+    });
+
+    document.getElementById('customizeForm').addEventListener('input', updatePreview);
+
+    document.getElementById('customizeForm').addEventListener('submit', (event) => {
+        event.preventDefault();
+        const objectType = document.getElementById('objectType').value;
+        const color = document.getElementById('color').value;
+        const width = parseFloat(document.getElementById('width').value);
+        const height = parseFloat(document.getElementById('height').value);
+        const depth = parseFloat(document.getElementById('depth').value);
+        
+        if (objectType === 'Ball') {
+            const ball = new Ball(physicsWorld, draggableObjects, rigidBodies, scene, {
+                x: 0, y: 10, z: 0,
+                radius: width, // Assuming radius is set using width
+                color: color
+            });
+            ball.create();
+        } else if (objectType === 'Block') {
+            const block = new Block(physicsWorld, draggableObjects, rigidBodies, scene, {
+                x: 0, y: 10, z: 0,
+                width: width, height: height, depth: depth,
+                color: color
+            });
+            block.create();
+        }
+
+        document.getElementById('customizePopup').style.display = 'none';
+    });
+
+    // Update slider value display
+    document.querySelectorAll('input[type="range"]').forEach(input => {
+        input.addEventListener('input', (event) => {
+            const id = event.target.id;
+            document.getElementById(id + 'Value').textContent = event.target.value;
+        });
+    });
+
+    // Ensure the renderer is resized correctly on initial load
+    document.addEventListener('DOMContentLoaded', () => {
+        setupPreview();
+        resizePreviewRenderer();
+    });
+    
     window.addEventListener('resize', onWindowResize);
-}
-
-//NOT WORKING!!
-function setupGUI() {
-    gui = new dat.GUI();
-
-    const objectFolder = gui.addFolder('Selected Object');
-
-    objectFolder.addColor(selectedParams, 'color').onChange((value) => {
-        if (selectedObject) {
-            selectedObject.material.color.set(value);
-        }
-    });
-
-    objectFolder.add(selectedParams, 'radius', 0.5, 5).onChange((value) => {
-        if (selectedObject && selectedObject.userData.tag === 'BALL') {
-            selectedObject.scale.set(value, value, value);
-            selectedObject.userData.physicsBody.setCollisionShape(new Ammo.btSphereShape(value / 2));
-            selectedObject.userData.physicsBody.activate();
-        }
-    }).listen();
-
-    objectFolder.add(selectedParams, 'width', 0.5, 5).onChange((value) => {
-        if (selectedObject && selectedObject.userData.tag === 'BLOCK') {
-            selectedObject.scale.x = value;
-            selectedObject.userData.physicsBody.setCollisionShape(new Ammo.btBoxShape(new Ammo.btVector3(value / 2, selectedObject.scale.y / 2, selectedObject.scale.z / 2)));
-            selectedObject.userData.physicsBody.activate();
-        }
-    }).listen();
-
-    objectFolder.add(selectedParams, 'height', 0.5, 5).onChange((value) => {
-        if (selectedObject && selectedObject.userData.tag === 'BLOCK') {
-            selectedObject.scale.y = value;
-            selectedObject.userData.physicsBody.setCollisionShape(new Ammo.btBoxShape(new Ammo.btVector3(selectedObject.scale.x / 2, value / 2, selectedObject.scale.z / 2)));
-            selectedObject.userData.physicsBody.activate();
-        }
-    }).listen();
-
-    objectFolder.add(selectedParams, 'depth', 0.5, 5).onChange((value) => {
-        if (selectedObject && selectedObject.userData.tag === 'BLOCK') {
-            selectedObject.scale.z = value;
-            selectedObject.userData.physicsBody.setCollisionShape(new Ammo.btBoxShape(new Ammo.btVector3(selectedObject.scale.x / 2, selectedObject.scale.y / 2, value / 2)));
-            selectedObject.userData.physicsBody.activate();
-        }
-    }).listen();
-
-    objectFolder.open();
-
-    dragControls.addEventListener('hoveron', function (event) {
-        selectedObject = event.object;
-        selectedParams.color = `#${selectedObject.material.color.getHexString()}`;
-        if (selectedObject.userData.tag === 'BALL') {
-            selectedParams.radius = selectedObject.scale.x;
-        } else if (selectedObject.userData.tag === 'BLOCK') {
-            selectedParams.width = selectedObject.scale.x;
-            selectedParams.height = selectedObject.scale.y;
-            selectedParams.depth = selectedObject.scale.z;
-        }
-        gui.updateDisplay();
-    });
-
-    dragControls.addEventListener('hoveroff', function () {
-        selectedObject = null;
-    });
 }
 
 function onDragStart(event) {
@@ -265,5 +334,7 @@ function renderFrame() {
     updatePhysics(deltaTime);
     setupCollisionDetection();
     renderer.render(scene, camera);
-    renderer.setAnimationLoop(renderFrame);
+    previewRenderer.render(previewScene, previewCamera); // Render preview
+    // renderer.setAnimationLoop(renderFrame);
+    requestAnimationFrame(renderFrame);
 }
