@@ -3,6 +3,13 @@ Web based multibody physics engine used to simulate robots over the web. Uses *A
 
 Goal is to make this into a plug and play website avoiding most if not all coding for users!
 
+#### Demonstration:
+- The layout of the GUI
+![phy-eng-gui](https://github.com/anushtup-nandy/physics-engine-web/blob/main/pics/phy-eng-main.png?raw=true)
+
+- Customizing the rigid bodies
+![phy-eng-cust](https://github.com/anushtup-nandy/physics-engine-web/blob/main/pics/phy-eng-cust.png?raw=true)
+
 ## Currently done:
 - [x] menu to spawn blocks and balls
 - [x] simple grid like plane 
